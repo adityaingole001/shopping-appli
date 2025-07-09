@@ -1,0 +1,19 @@
+
+/* About.js */
+
+/* #about-img {
+  background-image: url('../public/Image.jpg'); 
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  min-height: 100vh;
+} */
+ /* Contact.js */
+#contact-img{
+ background-image: url('../public/images.jpeg'); 
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  min-height: 100vh;
+  }
+
