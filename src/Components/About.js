@@ -1,8 +1,9 @@
-import "../App.css"
 function About() {
   return (
     <section id="About-img"
-      className="position-relative text-white d-flex align-items-center" >
+      className="position-relative text-white d-flex align-items-center"
+      style={{ backgroundImage: `url("${process.env.PUBLIC_URL}/Image.jpg")` }}
+    >
       <div className="position-absolute top-0 start-0 w-100 h-100" style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)', zIndex: 1 }}
       ></div>
 

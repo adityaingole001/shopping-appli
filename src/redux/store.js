@@ -1,11 +1,17 @@
 import { configureStore } from '@reduxjs/toolkit';
 import cartReducer from './cartSlice';
-import authReducer from './authSlice';
 
 const store = configureStore({
   reducer: {
-    cart: cartReducer,
-    auth: authReducer
+    cart: cartReducer
+  }
+});
+
+store.subscribe(() => {
+  try {
+    localStorage.setItem('cart', JSON.stringify(store.getState().cart.items));
+  } catch (error) {
+    console.error('Unable to save the cart:', error);
   }
 });
 

@@ -1,249 +1,258 @@
-// import React, { useEffect, useState } from 'react';
-// import { useDispatch } from 'react-redux';
-// import { addToCart } from '../redux/cartSlice';
-
-// function Home() {
-//   const [products, setProducts] = useState([]);
-//   const [filtered, setFiltered] = useState([]);
-//   const [categories, setCategories] = useState([]);
-//   const [selectedProduct, setSelectedProduct] = useState(null);
-//   const dispatch = useDispatch();
-
-//   useEffect(() => {
-//     fetch('https://fakestoreapi.com/products')
-//       .then(res => res.json())
-//       .then(data => {
-//         setProducts(data);
-//         setFiltered(data);
-//         setCategories([...new Set(data.map(item => item.category))]);
-//       });
-//   }, []);
-
-//   const handleFilter = (category) => {
-//     if (category === "all") {
-//       setFiltered(products);
-//     } else {
-//       setFiltered(products.filter(item => item.category === category));
-//     }
-//   };
-
-//   const handleAddToCart = (product) => {
-//     dispatch(addToCart(product));
-//     alert("Added to cart!");
-//   };
-
-//   if (selectedProduct) {
-//     return (
-//       <div className="container mt-5">
-//         <button className="btn btn-dark mb-3" onClick={() => setSelectedProduct(null)}>
-//           ← Back to Products
-//         </button>
-//         <div className="card shadow p-3">
-//           <div className="row">
-//             <div className="col-md-4 text-center">
-//               <img
-//                 src={selectedProduct.image}
-//                 alt={selectedProduct.title}
-//                 className="img-fluid"
-//                 style={{ height: '250px', objectFit: 'contain' }}
-//               />
-//             </div>
-//             <div className="col-md-8">
-//               <h3>{selectedProduct.title}</h3>
-//               <p className="text-muted">{selectedProduct.category}</p>
-//               <p>{selectedProduct.description}</p>
-//               <h4>${selectedProduct.price}</h4>
-//               <button className="btn btn-dark mt-2" onClick={() => handleAddToCart(selectedProduct)}>
-//                 Add to Cart
-//               </button>
-//             </div>
-//           </div>
-//         </div>
-//       </div>
-//     );
-//   }
-
-//   return (
-//     <div className="container mt-4">
-//       {/* Bootstrap Carousel */}
-//       <div id="carouselExampleIndicators" className="carousel slide mb-4" data-bs-ride="carousel">
-//         <div className="carousel-indicators">
-//           <button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="0" className="active"></button>
-//           <button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="1"></button>
-//           <button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="2"></button>
-//         </div>
-//         <div className="carousel-inner">
-//           <div className="carousel-item active">
-//             <img src="Image1.jpg" className="d-block w-100" alt="Slide 1" />
-//           </div>
-//           <div className="carousel-item">
-//             <img src="Image2.jpg" className="d-block w-100" alt="Slide 2" />
-//           </div>
-//           <div className="carousel-item">
-//             <img src="Image3.jpg" className="d-block w-100" alt="Slide 3" />
-//           </div>
-//         </div>
-//         <button className="carousel-control-prev" type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide="prev">
-//           <span className="carousel-control-prev-icon" aria-hidden="true"></span>
-//           <span className="visually-hidden">Previous</span>
-//         </button>
-//         <button className="carousel-control-next" type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide="next">
-//           <span className="carousel-control-next-icon" aria-hidden="true"></span>
-//           <span className="visually-hidden">Next</span>
-//         </button>
-//       </div>
-
-//       {/* Filters */}
-//       <h2 className="text-center mb-3">Products</h2>
-//       <div className="text-center mb-4">
-//         <button className="btn btn-dark mx-2 mb-2" onClick={() => handleFilter("all")}>
-//           All
-//         </button>
-//         {categories.map((cat, index) => (
-//           <button
-//             key={index}
-//             className="btn btn-dark mx-2 mb-2"
-//             onClick={() => handleFilter(cat)}
-//           >
-//             {cat}
-//           </button>
-//         ))}
-//       </div>
-
-//       {/* Product Grid */}
-//       <div className="row">
-//         {filtered.map(product => (
-//           <div key={product.id} className="col-md-4 mb-4">
-//             <div className="card h-100 shadow-sm">
-//               <img
-//                 src={product.image}
-//                 alt={product.title}
-//                 className="card-img-top p-3"
-//                 style={{ height: '200px', objectFit: 'contain' }}
-//               />
-//               <div className="card-body d-flex flex-column">
-//                 <h6 className="card-title text-center">{product.title.slice(0, 40)}...</h6>
-//                 <p className="text-success text-center fw-bold">${product.price}</p>
-//                 <button
-//                   className="btn btn-dark mt-auto"
-//                   onClick={() => setSelectedProduct(product)}
-//                 >
-//                   View Details
-//                 </button>
-//               </div>
-//             </div>
-//           </div>
-//         ))}
-//       </div>
-//     </div>
-//   );
-// }
-
-// export default Home;
-import React, { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { addToCart } from '../redux/cartSlice';
 
+const currency = new Intl.NumberFormat('en-US', {
+  style: 'currency',
+  currency: 'USD'
+});
+
 function Home() {
   const [products, setProducts] = useState([]);
-  const [filtered, setFiltered] = useState([]);
-  const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [category, setCategory] = useState('all');
+  const [search, setSearch] = useState('');
+  const [sort, setSort] = useState('featured');
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [cartMessage, setCartMessage] = useState('');
+  const [reloadKey, setReloadKey] = useState(0);
   const dispatch = useDispatch();
 
   useEffect(() => {
-    fetch('https://fakestoreapi.com/products')
-      .then(res => res.json())
-      .then(data => {
-        setProducts(data);
-        setFiltered(data);
-        setCategories([...new Set(data.map(item => item.category))]);
-      });
-  }, []);
+    const controller = new AbortController();
+    setLoading(true);
+    setError('');
 
-  const handleFilter = (category) => {
-    if (category === "all") {
-      setFiltered(products);
-    } else {
-      setFiltered(products.filter(item => item.category === category));
-    }
-  };
+    fetch('https://fakestoreapi.com/products', { signal: controller.signal })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(`Product request failed (${response.status}).`);
+        }
+        return response.json();
+      })
+      .then((data) => {
+        if (!Array.isArray(data)) {
+          throw new Error('The product service returned an unexpected response.');
+        }
+        setProducts(data);
+      })
+      .catch((requestError) => {
+        if (requestError.name !== 'AbortError') {
+          setError(requestError.message || 'Products could not be loaded. Please try again.');
+        }
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) {
+          setLoading(false);
+        }
+      });
+
+    return () => controller.abort();
+  }, [reloadKey]);
+
+  useEffect(() => {
+    if (!cartMessage) return undefined;
+    const timer = setTimeout(() => setCartMessage(''), 2500);
+    return () => clearTimeout(timer);
+  }, [cartMessage]);
+
+  const categories = useMemo(
+    () => [...new Set(products.map((product) => product.category))],
+    [products]
+  );
+
+  const visibleProducts = useMemo(() => {
+    const query = search.trim().toLowerCase();
+    const result = products.filter((product) => {
+      const matchesCategory = category === 'all' || product.category === category;
+      const matchesSearch = !query || product.title.toLowerCase().includes(query);
+      return matchesCategory && matchesSearch;
+    });
+
+    if (sort === 'price-low') result.sort((a, b) => a.price - b.price);
+    if (sort === 'price-high') result.sort((a, b) => b.price - a.price);
+    if (sort === 'name') result.sort((a, b) => a.title.localeCompare(b.title));
+    return result;
+  }, [category, products, search, sort]);
 
   const handleAddToCart = (product) => {
     dispatch(addToCart(product));
-    setCartMessage(`${product.title.slice(0, 20)} added to cart!`);
-
-    // Clear message after 2 seconds
-    setTimeout(() => setCartMessage(''), 2000);
+    setCartMessage(`${product.title} added to your cart.`);
   };
 
   if (selectedProduct) {
     return (
-      <div className="container mt-5">
-        <button className="btn btn-dark mb-3" onClick={() => setSelectedProduct(null)}>
-          ← Back to Products
+      <main className="container shop-container">
+        <button className="btn btn-link back-link px-0 mb-4" onClick={() => setSelectedProduct(null)}>
+          <i className="bi bi-arrow-left me-2" aria-hidden="true" />
+          Back to products
         </button>
-        <div className="card shadow p-3">
-          <div className="row">
-            <div className="col-md-4 text-center">
-              <img src={selectedProduct.image} alt={selectedProduct.title} className="img-fluid" style={{ height: '250px', objectFit: 'contain' }} />
+        <article className="product-detail card border-0 shadow-sm">
+          <div className="row g-0 align-items-center">
+            <div className="col-md-5 product-detail-image">
+              <img src={selectedProduct.image} alt={selectedProduct.title} />
             </div>
-            <div className="col-md-8">
-              <h3>{selectedProduct.title}</h3>
-              <p className="text-muted">{selectedProduct.category}</p>
-              <p>{selectedProduct.description}</p>
-              <h4>${selectedProduct.price}</h4>
-
-              {/* Message */}
-              {cartMessage && <p className="text-success fw-bold">{cartMessage}</p>}
-
-              <button className="btn btn-dark mt-2" onClick={() => handleAddToCart(selectedProduct)}>
-                Add to Cart
-              </button>
+            <div className="col-md-7">
+              <div className="card-body p-4 p-lg-5">
+                <span className="eyebrow">{selectedProduct.category}</span>
+                <h1 className="h2 mt-2">{selectedProduct.title}</h1>
+                <p className="text-secondary mt-3">{selectedProduct.description}</p>
+                <p className="product-price detail-price">{currency.format(selectedProduct.price)}</p>
+                <button className="btn btn-brand btn-lg" onClick={() => handleAddToCart(selectedProduct)}>
+                  <i className="bi bi-bag-plus me-2" aria-hidden="true" />
+                  Add to cart
+                </button>
+                {cartMessage && <p className="alert alert-success mt-3 mb-0" role="status">{cartMessage}</p>}
+              </div>
             </div>
           </div>
-        </div>
-      </div>
+        </article>
+      </main>
     );
   }
 
   return (
-    <div className="container mt-4">
-      <img src="Image1.jpg" alt="" width="100%" />
-      <h2 className="text-center mt-3 mb-3">Products</h2>
+    <main>
+      <section
+        className="shop-hero"
+        style={{
+          backgroundImage: `linear-gradient(90deg, rgb(20 43 34 / 88%) 0%, rgb(20 43 34 / 66%) 47%, rgb(20 43 34 / 12%) 100%), url("${process.env.PUBLIC_URL}/Image1.jpg")`
+        }}
+      >
+        <div className="container shop-hero-content">
+          <p className="eyebrow text-white-50">A little something for everyone</p>
+          <h1>Find your next<br />everyday favorite.</h1>
+          <p>Thoughtful picks, easy browsing, and a cart that stays with you.</p>
+          <a className="btn btn-light btn-lg mt-2" href="#products">Explore products</a>
+        </div>
+      </section>
 
-      {/* Message */}
-      {cartMessage && <div className="text-success text-center fw-bold mb-3">{cartMessage}</div>}
-
-      <div className="text-center mb-4">
-        <button className="btn btn-dark mx-2 mb-2" onClick={() => handleFilter("all")}>
-          All
-        </button>
-        {categories.map((cat, index) => (
-          <button key={index} className="btn btn-dark mx-2 mb-2" onClick={() => handleFilter(cat)}>
-            {cat}
-          </button>
-        ))}
-      </div>
-
-      <div className="row">
-        {filtered.map(product => (
-          <div key={product.id} className="col-md-4 mb-4">
-            <div className="card h-100 shadow-sm">
-              <img src={product.image} alt={product.title} className="card-img-top p-3" style={{ height: '200px', objectFit: 'contain' }} />
-              <div className="card-body d-flex flex-column">
-                <h6 className="card-title text-center">{product.title.slice(0, 40)}...</h6>
-                <p className="text-success text-center fw-bold">${product.price}</p>
-                <button className="btn btn-dark mt-auto" onClick={() => setSelectedProduct(product)}>
-                  View Details
-                </button>
-              </div>
-            </div>
+      <section className="container shop-container" id="products">
+        <div className="section-heading">
+          <div>
+            <p className="eyebrow mb-2">The collection</p>
+            <h2>Shop all products</h2>
           </div>
-        ))}
-      </div>
-    </div>
+          {!loading && !error && <span className="text-secondary">{visibleProducts.length} items</span>}
+        </div>
+
+        {cartMessage && <div className="alert alert-success" role="status">{cartMessage}</div>}
+
+        <div className="catalog-controls">
+          <div className="category-list" aria-label="Filter products by category">
+            <button
+              type="button"
+              className={`category-chip ${category === 'all' ? 'active' : ''}`}
+              aria-pressed={category === 'all'}
+              onClick={() => setCategory('all')}
+            >
+              All
+            </button>
+            {categories.map((item) => (
+              <button
+                type="button"
+                key={item}
+                className={`category-chip ${category === item ? 'active' : ''}`}
+                aria-pressed={category === item}
+                onClick={() => setCategory(item)}
+              >
+                {item}
+              </button>
+            ))}
+          </div>
+          <div className="catalog-tools">
+            <label className="visually-hidden" htmlFor="product-search">Search products</label>
+            <div className="search-control">
+              <i className="bi bi-search" aria-hidden="true" />
+              <input
+                id="product-search"
+                type="search"
+                className="form-control"
+                placeholder="Search products"
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+              />
+            </div>
+            <label className="visually-hidden" htmlFor="product-sort">Sort products</label>
+            <select id="product-sort" className="form-select sort-control" value={sort} onChange={(event) => setSort(event.target.value)}>
+              <option value="featured">Featured</option>
+              <option value="price-low">Price: low to high</option>
+              <option value="price-high">Price: high to low</option>
+              <option value="name">Name: A to Z</option>
+            </select>
+          </div>
+        </div>
+
+        {loading && (
+          <div className="loading-state" role="status">
+            <span className="spinner-border text-dark" aria-hidden="true" />
+            <span>Finding good things for you...</span>
+          </div>
+        )}
+
+        {error && (
+          <div className="empty-state" role="alert">
+            <i className="bi bi-cloud-slash" aria-hidden="true" />
+            <h3>We couldn’t load the products</h3>
+            <p>{error}</p>
+            <button className="btn btn-brand" onClick={() => setReloadKey((key) => key + 1)}>Try again</button>
+          </div>
+        )}
+
+        {!loading && !error && visibleProducts.length === 0 && (
+          <div className="empty-state">
+            <i className="bi bi-search" aria-hidden="true" />
+            <h3>No matching products</h3>
+            <p>Try a different search or category.</p>
+            <button
+              className="btn btn-outline-dark"
+              onClick={() => {
+                setSearch('');
+                setCategory('all');
+              }}
+            >
+              Clear filters
+            </button>
+          </div>
+        )}
+
+        {!loading && !error && visibleProducts.length > 0 && (
+          <div className="product-grid">
+            {visibleProducts.map((product) => (
+              <article className="product-card card" key={product.id}>
+                <button
+                  type="button"
+                  className="product-image-button"
+                  onClick={() => setSelectedProduct(product)}
+                  aria-label={`View ${product.title}`}
+                >
+                  <img src={product.image} alt="" loading="lazy" />
+                </button>
+                <div className="product-card-body">
+                  <span className="eyebrow">{product.category}</span>
+                  <h3>{product.title}</h3>
+                  <div className="product-card-footer">
+                    <span className="product-price">{currency.format(product.price)}</span>
+                    <button
+                      type="button"
+                      className="add-button"
+                      onClick={() => handleAddToCart(product)}
+                      aria-label={`Add ${product.title} to cart`}
+                    >
+                      <i className="bi bi-plus-lg" aria-hidden="true" />
+                    </button>
+                  </div>
+                  <button type="button" className="view-product-link" onClick={() => setSelectedProduct(product)}>
+                    View details <i className="bi bi-arrow-up-right" aria-hidden="true" />
+                  </button>
+                </div>
+              </article>
+            ))}
+          </div>
+        )}
+      </section>
+    </main>
   );
 }
 

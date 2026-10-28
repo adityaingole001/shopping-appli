@@ -5,6 +5,9 @@ function Contact() {
   return (
     <div
      id="contact-img" className="container my-3"
+     style={{
+       backgroundImage: `linear-gradient(rgb(255 255 255 / 54%), rgb(255 255 255 / 72%)), url("${process.env.PUBLIC_URL}/images.jpeg")`
+     }}
      >
       <h2 className="text-center pt-3 mb-4 text-dark">Contact Us</h2>
       <p className="text-center text-dark mb-4">
