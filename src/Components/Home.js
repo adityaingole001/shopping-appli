@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useDispatch } from 'react-redux';
-import { addToCart } from '../redux/cartSlice';
+import { motion, useReducedMotion } from 'framer-motion';
+import { addToCart, convertLegacyCartPrices } from '../redux/cartSlice';
+import { convertUsdToInr, fetchUsdToInrRate } from '../utils/pricing';
 
-const currency = new Intl.NumberFormat('en-US', {
+const currency = new Intl.NumberFormat('en-IN', {
   style: 'currency',
-  currency: 'USD'
+  currency: 'INR'
 });
 
 function Home() {
@@ -17,6 +19,7 @@ function Home() {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [cartMessage, setCartMessage] = useState('');
   const [reloadKey, setReloadKey] = useState(0);
+  const shouldReduceMotion = useReducedMotion();
   const dispatch = useDispatch();
 
   useEffect(() => {
@@ -24,18 +27,31 @@ function Home() {
     setLoading(true);
     setError('');
 
-    fetch('https://fakestoreapi.com/products', { signal: controller.signal })
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error(`Product request failed (${response.status}).`);
+    Promise.all([
+      fetchUsdToInrRate(controller.signal),
+      fetch('https://fakestoreapi.com/products', { signal: controller.signal })
+    ])
+      .then(async ([usdToInrRate, productsResponse]) => {
+        if (!productsResponse.ok) {
+          throw new Error(`Product request failed (${productsResponse.status}).`);
         }
-        return response.json();
-      })
-      .then((data) => {
+        const data = await productsResponse.json();
         if (!Array.isArray(data)) {
           throw new Error('The product service returned an unexpected response.');
         }
-        setProducts(data);
+        return {
+          usdToInrRate,
+          products: data.map((product) => ({
+            ...product,
+            price: convertUsdToInr(product.price, usdToInrRate),
+            priceCurrency: 'INR'
+          }))
+        };
+      })
+      .then(({ usdToInrRate, products: convertedProducts }) => {
+        if (controller.signal.aborted) return;
+        dispatch(convertLegacyCartPrices(usdToInrRate));
+        setProducts(convertedProducts);
       })
       .catch((requestError) => {
         if (requestError.name !== 'AbortError') {
@@ -49,7 +65,7 @@ function Home() {
       });
 
     return () => controller.abort();
-  }, [reloadKey]);
+  }, [dispatch, reloadKey]);
 
   useEffect(() => {
     if (!cartMessage) return undefined;
@@ -88,7 +104,12 @@ function Home() {
           <i className="bi bi-arrow-left me-2" aria-hidden="true" />
           Back to products
         </button>
-        <article className="product-detail card border-0 shadow-sm">
+        <motion.article
+          className="product-detail card border-0 shadow-sm"
+          initial={shouldReduceMotion ? false : { opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: shouldReduceMotion ? 0 : 0.24, ease: 'easeOut' }}
+        >
           <div className="row g-0 align-items-center">
             <div className="col-md-5 product-detail-image">
               <img src={selectedProduct.image} alt={selectedProduct.title} />
@@ -100,14 +121,14 @@ function Home() {
                 <p className="text-secondary mt-3">{selectedProduct.description}</p>
                 <p className="product-price detail-price">{currency.format(selectedProduct.price)}</p>
                 <button className="btn btn-brand btn-lg" onClick={() => handleAddToCart(selectedProduct)}>
-                  <i className="bi bi-bag-plus me-2" aria-hidden="true" />
+                  <i className="bi bi-small-plus me-1" aria-hidden="true" />
                   Add to cart
                 </button>
                 {cartMessage && <p className="alert alert-success mt-3 mb-0" role="status">{cartMessage}</p>}
               </div>
             </div>
           </div>
-        </article>
+        </motion.article>
       </main>
     );
   }
@@ -220,7 +241,15 @@ function Home() {
         {!loading && !error && visibleProducts.length > 0 && (
           <div className="product-grid">
             {visibleProducts.map((product) => (
-              <article className="product-card card" key={product.id}>
+              <motion.article
+                className="product-card card"
+                key={product.id}
+                initial={shouldReduceMotion ? false : { opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                whileHover={shouldReduceMotion ? undefined : { y: -3 }}
+                whileTap={shouldReduceMotion ? undefined : { scale: 0.99 }}
+                transition={{ duration: shouldReduceMotion ? 0 : 0.22, ease: 'easeOut' }}
+              >
                 <button
                   type="button"
                   className="product-image-button"
@@ -247,7 +276,7 @@ function Home() {
                     View details <i className="bi bi-arrow-up-right" aria-hidden="true" />
                   </button>
                 </div>
-              </article>
+              </motion.article>
             ))}
           </div>
         )}

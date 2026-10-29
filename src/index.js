@@ -3,6 +3,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
 import { Provider } from 'react-redux';
+import { AuthProvider } from './Context/AuthContext';
 import store from './redux/store';
 import './index.css';
 import './App.css';
@@ -10,6 +11,8 @@ import './App.css';
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <Provider store={store}>
-    <App />
+    <AuthProvider>
+      <App />
+    </AuthProvider>
   </Provider>
 );
