@@ -91,17 +91,59 @@ function AccountModal({ initialMode, onClose, onSuccess }) {
         >
           <i className="bi bi-x-lg" aria-hidden="true" />
         </button>
-        <span className="brand-mark account-modal-mark">
-          <i className="bi bi-bag-heart" aria-hidden="true" />
-        </span>
-        <p className="eyebrow mt-3 mb-2">Welcome to ShopFusion</p>
-        <h2 id="account-modal-title">{mode === 'signup' ? 'Create your account' : 'Sign in to your account'}</h2>
-        <p className="account-modal-subtitle">
-          {mode === 'signup'
-            ? 'Save your details and make shopping feel more personal.'
-            : 'Sign in to pick up where you left off.'}
-        </p>
+        <div className="account-modal-heading">
+          <span className="brand-mark account-modal-mark">
+            <i className="bi bi-bag-heart" aria-hidden="true" />
+          </span>
+          <p className="eyebrow">WELCOME TO SHOPFUSION</p>
+          <h2 id="account-modal-title">
+            {mode === 'signup' ? 'Join ShopFusion' : 'Welcome back'}
+          </h2>
+          <p className="account-modal-subtitle">
+            {mode === 'signup'
+              ? 'Create an account for a more personal shopping experience.'
+              : 'Sign in to continue to your account.'}
+          </p>
+        </div>
 
+        <div className="account-mode-tabs" role="tablist" aria-label="Account options">
+          <button
+            type="button"
+            role="tab"
+            id="account-signin-tab"
+            aria-controls="account-auth-panel"
+            aria-selected={mode === 'signin'}
+            className={mode === 'signin' ? 'active' : ''}
+            disabled={busy}
+            onClick={() => {
+              setError('');
+              setMode('signin');
+            }}
+          >
+            Sign in
+          </button>
+          <button
+            type="button"
+            role="tab"
+            id="account-signup-tab"
+            aria-controls="account-auth-panel"
+            aria-selected={mode === 'signup'}
+            className={mode === 'signup' ? 'active' : ''}
+            disabled={busy}
+            onClick={() => {
+              setError('');
+              setMode('signup');
+            }}
+          >
+            Create account
+          </button>
+        </div>
+
+        <div
+          id="account-auth-panel"
+          role="tabpanel"
+          aria-labelledby={mode === 'signup' ? 'account-signup-tab' : 'account-signin-tab'}
+        >
         {!configured && (
           <div className="alert alert-warning text-start" role="alert">
             Account sign-in is not configured yet. Add the Firebase web app settings to the project’s root <code>.env.local</code>, then restart the app. See the Firebase setup steps in README.
@@ -119,11 +161,11 @@ function AccountModal({ initialMode, onClose, onSuccess }) {
           Continue with Google
         </button>
 
-        <div className="account-divider"><span>or with email</span></div>
+        <div className="account-divider"><span>or continue with email</span></div>
 
         <form onSubmit={handleSubmit}>
           {mode === 'signup' && (
-            <div className="mb-3">
+            <div className="mb-3 account-name-field">
               <label className="form-label" htmlFor="account-name">Full name</label>
               <input
                 className="form-control"
@@ -168,18 +210,11 @@ function AccountModal({ initialMode, onClose, onSuccess }) {
         </form>
 
         <p className="account-mode-switch">
-          {mode === 'signup' ? 'Already have an account?' : 'New to ShopFusion?'}{' '}
-          <button
-            type="button"
-            disabled={busy}
-            onClick={() => {
-              setError('');
-              setMode(mode === 'signup' ? 'signin' : 'signup');
-            }}
-          >
-            {mode === 'signup' ? 'Sign in' : 'Create account'}
-          </button>
+          {mode === 'signup'
+            ? 'Your account keeps your orders and delivery details together.'
+            : 'Your bag is saved while you sign in.'}
         </p>
+        </div>
       </section>
     </div>
   );

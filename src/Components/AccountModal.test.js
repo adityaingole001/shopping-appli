@@ -24,7 +24,7 @@ test('switches to account creation and submits the entered profile and credentia
   const onClose = jest.fn();
   render(<AccountModal initialMode="signin" onClose={onClose} />);
 
-  fireEvent.click(screen.getByRole('button', { name: /create account/i }));
+  fireEvent.click(screen.getByRole('tab', { name: /create account/i }));
   fireEvent.change(screen.getByLabelText(/full name/i), { target: { value: 'Taylor Shopper' } });
   fireEvent.change(screen.getByLabelText(/email address/i), { target: { value: 'taylor@example.com' } });
   fireEvent.change(screen.getByLabelText(/password/i), { target: { value: 'secure-password' } });
