@@ -1,4 +1,4 @@
-﻿export async function fetchUsdToInrRate(signal) {
+export async function fetchUsdToInrRate(signal) {
   const response = await fetch('/api/pricing', { signal });
   const responseText = await response.text();
   let data;
